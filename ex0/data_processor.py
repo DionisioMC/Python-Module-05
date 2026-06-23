@@ -55,7 +55,7 @@ class TextProcessor(DataProcessor):
 
     def ingest(self, data: typing.Union[str, list[str]]) -> None:
         if isinstance(data, str):
-            self.data.append((len(self.data), str(data)))
+            self.data.append((len(self.data), data))
         elif all(isinstance(entry, str) for entry in data):
             for entry in data:
                 self.data.append((len(self.data), str(entry)))
@@ -112,7 +112,8 @@ if __name__ == "__main__":
         print(f"Got exception: {e}")
     num_test = [1, 2, 3, 4, 5]
     print(f"Processing data: {num_test}")
-    num_processor.ingest(num_test)
+    if num_processor.validate(num_test):
+        num_processor.ingest(num_test)
     print("Extracting 3 values...")
     for i in range(3):
         num, value = num_processor.output()
@@ -122,7 +123,8 @@ if __name__ == "__main__":
     print(f"Trying to validate input '42': {text_processor.validate(42)}")
     text_test = ['Hello', 'Nexus', 'World']
     print(f"Processing data: {text_test}")
-    text_processor.ingest(text_test)
+    if text_processor.validate(text_test):
+        text_processor.ingest(text_test)
     print("Extracting 1 value...")
     num, value = text_processor.output()
     print(f"Text value {num}: {value}")
@@ -132,7 +134,8 @@ if __name__ == "__main__":
     log_test = [{'log_level': 'NOTICE', 'log_message': 'Connection to server'},
                 {'log_level': 'ERROR', 'log_message': 'Unauthorized access!!'}]
     print(f"Processing data: {log_test}")
-    log_processor.ingest(log_test)
+    if log_processor.validate(log_test):
+        log_processor.ingest(log_test)
     print("Extracting 2 values...")
     for i in range(2):
         num, value = log_processor.output()

@@ -98,42 +98,39 @@ class LogProcessor(DataProcessor):
             raise Exception("Improper log data")
 
 
+class DataStream:
+    def __init__(self):
+        self._processors: list[DataProcessor] = []
+
+    def register_processor(self, proc: DataProcessor) -> None:
+        self._processors.append(proc)
+
+    def print_processors_stats(self) -> None:
+        print("== DataStream statistics ==")
+        if len(self._processors) == 0:
+            print("No processor found, no data\n")
+
+    def process_stream(self, stream: list[typing.Any]) -> None:
+        for item in stream:
+            processed = False
+            for processor in self._processors:
+                if processor.validate(item):
+                    processor.ingest(item)
+                    processed = True
+            if processed == False:
+                print(f"DataStream error - Can't process element in stream: {item}")
+        self.print_processors_stats()
+
+
 if __name__ == "__main__":
-    print("=== Code Nexus - Data Processor ===\n")
-    print("Testing Numeric Processor...")
-    num_processor = NumericProcessor()
-    print(f"Trying to validate input '42': {num_processor.validate(42)}")
-    print(
-        f"Trying to validate input 'Hello': {num_processor.validate('Hello')}")
-    print("Test invalid ingestion of string 'foo' without prior validation:")
-    try:
-        num_processor.ingest("foo")
-    except Exception as e:
-        print(f"Got exception: {e}")
-    num_test = [1, 2, 3, 4, 5]
-    print(f"Processing data: {num_test}")
-    num_processor.ingest(num_test)
-    print("Extracting 3 values...")
-    for i in range(3):
-        num, value = num_processor.output()
-        print(f"Numeric value {num}: {value}")
-    print("\nTesting Text Processor...")
-    text_processor = TextProcessor()
-    print(f"Trying to validate input '42': {text_processor.validate(42)}")
-    text_test = ['Hello', 'Nexus', 'World']
-    print(f"Processing data: {text_test}")
-    text_processor.ingest(text_test)
-    print("Extracting 1 value...")
-    num, value = text_processor.output()
-    print(f"Text value {num}: {value}")
-    print("\nTesting Log Processor...")
-    log_processor = LogProcessor()
-    print(f"Trying to validate input 'Hello': {log_processor.validate('Hello')}")
-    log_test = [{'log_level': 'NOTICE', 'log_message': 'Connection to server'},
-                {'log_level': 'ERROR', 'log_message': 'Unauthorized access!!'}]
-    print(f"Processing data: {log_test}")
-    log_processor.ingest(log_test)
-    print("Extracting 2 values...")
-    for i in range(2):
-        num, value = log_processor.output()
-        print(f"Log entry {num}: {value}")
+    print("=== Code Nexus - Data Stream ===\n")
+    print("Initialize Data Stream...")
+    data_stream = DataStream()
+    data_stream.print_processors_stats()
+    print("Registering Numeric Processor\n")
+    data_stream.register_processor(NumericProcessor())
+    test = ['Hello world', [3.14, -1, 2.71],
+            [{'log_level': 'WARNING', 'log_message': 'Telnet access! Use ssh instead'}, 
+             {'log_level': 'INFO', 'log_message': 'User wil isconnected'}], 42, ['Hi', 'five']]
+    print(f"Send first batch of data on stream: {test}")
+    data_stream.process_stream(test)

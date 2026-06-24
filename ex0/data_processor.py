@@ -31,10 +31,13 @@ class NumericProcessor(DataProcessor):
         else:
             return False
 
-    def ingest(self, data: typing.Union[int, float, list[typing.Union[int, float]]]) -> None:
+    def ingest(self, data:
+               typing.Union[int, float,
+                            list[typing.Union[int, float]]]) -> None:
         if isinstance(data, (int, float)):
             self.data.append((len(self.data), str(data)))
-        elif all(isinstance(entry, (int, float)) for entry in data):
+        elif (isinstance(data, list) and all(
+              isinstance(entry, (int, float)) for entry in data)):
             for entry in data:
                 self.data.append((len(self.data), str(entry)))
         else:
@@ -56,7 +59,8 @@ class TextProcessor(DataProcessor):
     def ingest(self, data: typing.Union[str, list[str]]) -> None:
         if isinstance(data, str):
             self.data.append((len(self.data), data))
-        elif all(isinstance(entry, str) for entry in data):
+        elif (isinstance(data, list) and all(
+              isinstance(entry, str) for entry in data)):
             for entry in data:
                 self.data.append((len(self.data), str(entry)))
         else:
@@ -75,25 +79,29 @@ class LogProcessor(DataProcessor):
             return all(
                 isinstance(entry, dict) and
                 all(isinstance(key, str) and
-                    isinstance(value, str) 
+                    isinstance(value, str)
                     for key, value in entry.items())
                 for entry in data)
         else:
             return False
 
-    def ingest(self, data: typing.Union[str, list[str]]) -> None:
+    def ingest(self, data:
+               typing.Union[dict[str, str], list[dict[str, str]]]) -> None:
         if (isinstance(data, dict) and
             (all(isinstance(key, str) for key in data.keys()) and
-                    all(isinstance(value, str) for value in data.values()))):
-            self.data.append((len(self.data), f"{data['log_level']}: {data['log_message']}"))
-        elif all(
+                all(isinstance(value, str) for value in data.values()))):
+            self.data.append((len(self.data), f"{data['log_level']}: "
+                              f"{data['log_message']}"))
+        elif (isinstance(data, list) and all(
                 isinstance(entry, dict) and
                 all(isinstance(key, str) and
-                    isinstance(value, str) 
+                    isinstance(value, str)
                     for key, value in entry.items())
-                for entry in data):
+                for entry in data)):
+            entry: dict[str, str]
             for entry in data:
-                self.data.append((len(self.data), f"{entry['log_level']}: {entry['log_message']}"))
+                self.data.append((len(self.data), f"{entry['log_level']}: "
+                                  f"{entry['log_message']}"))
         else:
             raise Exception("Improper log data")
 
@@ -107,10 +115,10 @@ if __name__ == "__main__":
         f"Trying to validate input 'Hello': {num_processor.validate('Hello')}")
     print("Test invalid ingestion of string 'foo' without prior validation:")
     try:
-        num_processor.ingest("foo")
+        num_processor.ingest("foo")  # type: ignore
     except Exception as e:
         print(f"Got exception: {e}")
-    num_test = [1, 2, 3, 4, 5]
+    num_test: list[int | float] = [1, 2, 3, 4, 5]
     print(f"Processing data: {num_test}")
     if num_processor.validate(num_test):
         num_processor.ingest(num_test)
@@ -130,7 +138,8 @@ if __name__ == "__main__":
     print(f"Text value {num}: {value}")
     print("\nTesting Log Processor...")
     log_processor = LogProcessor()
-    print(f"Trying to validate input 'Hello': {log_processor.validate('Hello')}")
+    print("Trying to validate input 'Hello': "
+          f"{log_processor.validate('Hello')}")
     log_test = [{'log_level': 'NOTICE', 'log_message': 'Connection to server'},
                 {'log_level': 'ERROR', 'log_message': 'Unauthorized access!!'}]
     print(f"Processing data: {log_test}")

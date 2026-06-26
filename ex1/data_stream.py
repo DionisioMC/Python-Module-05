@@ -132,7 +132,7 @@ class DataStream:
         self._processors.append(proc)
 
     def print_processors_stats(self) -> None:
-        print("== DataStream statistics ==")
+        print("\n== DataStream statistics ==")
         if len(self._processors) == 0:
             print("No processor found, no data\n")
         else:
